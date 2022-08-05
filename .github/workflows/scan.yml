@@ -1,0 +1,31 @@
+name: Scan Paketo Builders
+
+on:
+  workflow_dispatch: { }
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          - index.docker.io/paketobuildpacks/builder:tiny
+          - index.docker.io/paketobuildpacks/builder:base
+          - index.docker.io/paketobuildpacks/builder:full
+          - index.docker.io/paketobuildpacks/builder-jammy-tiny:latest
+          - index.docker.io/paketobuildpacks/builder-jammy-base:latest
+          - index.docker.io/paketobuildpacks/builder-jammy-full:latest
+          - index.docker.io/paketobuildpacks/builder-jammy-buildpackless-tiny:latest
+          - index.docker.io/paketobuildpacks/builder-jammy-buildpackless-base:latest
+          - index.docker.io/paketobuildpacks/builder-jammy-buildpackless-full:latest
+      fail-fast: false  # don't cancel all test jobs when one fails
+    steps:
+      - id: scan
+        continue-on-error: true
+        name: "Scan ${{ matrix.image }}"
+        uses: Azure/container-scan@v0
+        with:
+          image-name: ${{ matrix.image }}
+      - name: "Print scan for ${{ matrix.image }}"
+        run: |
+          cat ${{ steps.scan.outputs.scan-report-path }}
